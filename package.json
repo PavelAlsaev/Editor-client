@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "build": "esbuild --bundle src/index.js --outfile=build/main.js",
+    "start": "esbuild --bundle src/index.js --outfile=build/main.js --servedir=build  --loader:.ttf=dataurl"
+  },
+  "dependencies": {
+    "@codemirror/lang-javascript": "^6.1.1",
+    "ace-code-editor": "^1.2.3",
+    "codemirror": "^5.63.0",
+    "esbuild": "^0.15.12",
+    "monaco-editor": "^0.34.1",
+    "socket.io": "^4.5.3",
+    "socket.io-client": "^4.5.3"
+  }
+}
