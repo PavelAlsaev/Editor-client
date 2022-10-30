@@ -3395,14 +3395,14 @@
         }
         function drawSelectionCursor(cm, head, output) {
           var pos = cursorCoords(cm, head, "div", null, null, !cm.options.singleCursorHeightPerLine);
-          var cursor = output.appendChild(elt("div", "\xA0", "CodeMirror-cursor"));
-          cursor.style.left = pos.left + "px";
-          cursor.style.top = pos.top + "px";
-          cursor.style.height = Math.max(0, pos.bottom - pos.top) * cm.options.cursorHeight + "px";
+          var cursor2 = output.appendChild(elt("div", "\xA0", "CodeMirror-cursor"));
+          cursor2.style.left = pos.left + "px";
+          cursor2.style.top = pos.top + "px";
+          cursor2.style.height = Math.max(0, pos.bottom - pos.top) * cm.options.cursorHeight + "px";
           if (/\bcm-fat-cursor\b/.test(cm.getWrapperElement().className)) {
             var charPos = charCoords(cm, head, "div", null, null);
             var width = charPos.right - charPos.left;
-            cursor.style.width = (width > 0 ? width : cm.defaultCharWidth()) + "px";
+            cursor2.style.width = (width > 0 ? width : cm.defaultCharWidth()) + "px";
           }
           if (pos.other) {
             var otherCursor = output.appendChild(elt("div", "\xA0", "CodeMirror-cursor CodeMirror-secondarycursor"));
@@ -12916,19 +12916,19 @@
             var cursors = cm.listSelections();
             var indentUnit = cm.getOption("indentUnit");
             for (var i2 = cursors.length - 1; i2 >= 0; i2--) {
-              var cursor = cursors[i2].head;
-              var toStartOfLine = cm.getRange({ line: cursor.line, ch: 0 }, cursor);
+              var cursor2 = cursors[i2].head;
+              var toStartOfLine = cm.getRange({ line: cursor2.line, ch: 0 }, cursor2);
               var column = CodeMirror3.countColumn(toStartOfLine, null, cm.getOption("tabSize"));
-              var deletePos = cm.findPosH(cursor, -1, "char", false);
+              var deletePos = cm.findPosH(cursor2, -1, "char", false);
               if (toStartOfLine && !/\S/.test(toStartOfLine) && column % indentUnit == 0) {
                 var prevIndent = new Pos(
-                  cursor.line,
+                  cursor2.line,
                   CodeMirror3.findColumn(toStartOfLine, column - indentUnit, indentUnit)
                 );
-                if (prevIndent.ch != cursor.ch)
+                if (prevIndent.ch != cursor2.ch)
                   deletePos = prevIndent;
               }
-              cm.replaceRange("", deletePos, cursor, "+delete");
+              cm.replaceRange("", deletePos, cursor2, "+delete");
             }
           });
         };
@@ -15410,6 +15410,7 @@
   var saveFile = document.getElementById("saveFile");
   var roomText = document.getElementById("id-room-text");
   var countUserText = document.getElementById("count-user-text");
+  var cursor = null;
   var editor = import_codemirror2.default.fromTextArea(document.getElementById("ds"), {
     lineNumbers: true,
     mode: "javascript"
@@ -15428,7 +15429,7 @@
     }
     loginForm.classList.add("d-none");
     editorForm.classList.remove("d-none");
-    socket = lookup2("ws://localhost:3000/", {
+    socket = lookup2("ws://92.63.101.204:3000/", {
       transports: ["websocket"]
     });
     socket.on("connect", () => {
@@ -15446,7 +15447,7 @@
       countUserText.innerText = users.length;
     });
     socket.on("disconnect", () => {
-      socket.emit("DISSCONNECT_FROM_ROOM", { roomId: userRoom, userName });
+      socket.emit("DISSCONNECT_FROM_ROOM", { roomId: userRoom, username: userName });
     });
     socket.on("START", ({ code, users }) => {
       if (!code)
@@ -15458,8 +15459,12 @@
       if (!code)
         return;
       editor.setValue(code);
+      if (cursor) {
+        editor.setCursor(cursor);
+      }
     });
     editor.on("change", (instance, changes) => {
+      cursor = editor.getCursor();
       const { origin } = changes;
       if (origin !== "setValue") {
         socket.emit("CODE_CHANGED", {
@@ -15470,11 +15475,12 @@
     });
   });
   exitButton.addEventListener("click", (e) => {
-    console.log({ roomId: inputIdRoom.value, username: inputUserName.value });
+    editor.setValue("");
     socket.emit("DISSCONNECT_FROM_ROOM", {
       roomId: inputIdRoom.value,
       username: inputUserName.value
     });
+    socket.close();
     editorForm.classList.add("d-none");
     loginForm.classList.remove("d-none");
   });

@@ -19,6 +19,7 @@ const formFile = document.getElementById("formFile");
 const saveFile = document.getElementById("saveFile");
 const roomText = document.getElementById("id-room-text");
 const countUserText = document.getElementById("count-user-text");
+let cursor = null;
 
 const editor = CodeMirror.fromTextArea(document.getElementById("ds"), {
   lineNumbers: true,
@@ -42,7 +43,7 @@ buttonInter.addEventListener("click", (e) => {
   loginForm.classList.add("d-none");
   editorForm.classList.remove("d-none");
 
-  socket = io("ws://localhost:3000/", {
+  socket = io("ws://92.63.101.204:3000/", {
     transports: ["websocket"],
   });
 
@@ -76,9 +77,13 @@ buttonInter.addEventListener("click", (e) => {
   socket.on("CODE_CHANGED", ({ code }) => {
     if (!code) return;
     editor.setValue(code);
+    if (cursor) {
+      editor.setCursor(cursor)
+    }
   });
 
   editor.on("change", (instance, changes) => {
+    cursor = editor.getCursor()
     const { origin } = changes;
     if (origin !== "setValue") {
       socket.emit("CODE_CHANGED", {
